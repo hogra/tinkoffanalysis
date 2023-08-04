@@ -5,8 +5,8 @@ from tinkoff.invest import CandleInterval, Client, exceptions
 from tinkoff.invest.utils import now
 
 
-TOKEN = input('Введите токен\n')
-# TOKEN = 't.UFG_TMMUqB-NVhCLM4VU9umcsXv5CV7JaepKmxcpyETPzK0qmsWTU7cHCMIar__4n9cFydOZmyiRTOtCjwsSIQ'
+
+TOKEN = 't.UFG_TMMUqB-NVhCLM4VU9umcsXv5CV7JaepKmxcpyETPzK0qmsWTU7cHCMIar__4n9cFydOZmyiRTOtCjwsSIQ'
 
 
 def main():
@@ -22,7 +22,8 @@ def main():
                 a = list(client.get_all_candles(figi=i, from_=now() - timedelta(days=365),
                                                 interval=CandleInterval.CANDLE_INTERVAL_MONTH))
                 candles.append({'name': client.instruments.share_by(id_type=1, id=i).instrument.name,
-                                'year': a[0].open, 'hyear': a[6].open, 'pmonth': a[11].close,
+                                'ticker': client.instruments.share_by(id_type=1, id=i).instrument.ticker,
+                                'year': a[0].open, 'hyear': a[6].open, 'pmonth': a[10].close,
                                 'month': list(client.get_all_candles(figi=i,
                                                                      from_=now() - timedelta(minutes=1),
                                                                      interval=
@@ -34,7 +35,7 @@ def main():
     print('Начинаю запись в xlsx')
     workbook = xlsxwriter.Workbook(f'{datetime.now().strftime("%d-%m-%Y %H-%M-%S")}.xlsx')
     worksheet = workbook.add_worksheet()
-    data = [(i['name'],
+    data = [(i['name'], i['ticker'],
              (((float(f"{i['month'].units}.{i['month'].nano}") - float(f"{i['pmonth'].units}.{i['pmonth'].nano}")) /
                float(f"{i['pmonth'].units}.{i['pmonth'].nano}")) * 100),
              (((float(f"{i['month'].units}.{i['month'].nano}") - float(f"{i['hyear'].units}.{i['hyear'].nano}")) /
@@ -42,14 +43,16 @@ def main():
              (((float(f"{i['month'].units}.{i['month'].nano}") - float(f"{i['year'].units}.{i['year'].nano}")) /
                float(f"{i['year'].units}.{i['year'].nano}")) * 100)) for i in candles]
     worksheet.write(0, 0, 'Компания')
-    worksheet.write(0, 1, 'Месяц')
-    worksheet.write(0, 2, 'Полгода')
-    worksheet.write(0, 3, 'Год')
-    for row, (item, month, hyear, year) in enumerate(data):
+    worksheet.write(0, 1, 'Тикер')
+    worksheet.write(0, 2, 'Месяц')
+    worksheet.write(0, 3, 'Полгода')
+    worksheet.write(0, 4, 'Год')
+    for row, (item, tic, month, hyear, year) in enumerate(data):
         worksheet.write(row + 1, 0, item)
-        worksheet.write(row + 1, 1, month)
-        worksheet.write(row + 1, 2, hyear)
-        worksheet.write(row + 1, 3, year)
+        worksheet.write(row + 1, 1, tic)
+        worksheet.write(row + 1, 2, month)
+        worksheet.write(row + 1, 3, hyear)
+        worksheet.write(row + 1, 4, year)
         row += 1
     workbook.close()
     print('Закончил работу')
